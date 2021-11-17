@@ -7,6 +7,6 @@ variable "location" {
 }
 
 variable "project_name" {
-  type = string
+  type    = string
   default = "minecraft-server"
 }
