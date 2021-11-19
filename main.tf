@@ -33,6 +33,31 @@ resource "azurerm_subnet" "sub" {
   address_prefixes     = ["10.0.2.0/24"]
 }
 
+resource "azurerm_public_ip" "pubip" {
+  allocation_method   = "Dynamic"
+  location            = var.location
+  name                = "${var.project_name}-pubip"
+  resource_group_name = var.resource_group_name
+}
+
+resource "azurerm_network_security_group" "sg" {
+  location            = var.location
+  name                = "${var.project_name}-sg"
+  resource_group_name = var.resource_group_name
+
+  security_rule {
+    access    = "Allow"
+    direction = "Inbound"
+    name      = "SSH"
+    priority  = 1001
+    protocol  = "Tcp"
+    source_port_range = "*"
+    source_address_prefix = "*"
+    destination_port_range = "22"
+    destination_address_prefix = "*"
+  }
+}
+
 resource "azurerm_network_interface" "nic" {
   location            = var.location
   name                = "${var.project_name}-interface"
@@ -41,7 +66,37 @@ resource "azurerm_network_interface" "nic" {
     name                          = "myNicConfiguration"
     subnet_id                     = azurerm_subnet.sub.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id = azurerm_public_ip.pubip.id
   }
+}
+
+resource "azurerm_network_interface_security_group_association" "sga" {
+  network_interface_id      = azurerm_network_interface.nic.id
+  network_security_group_id = azurerm_network_security_group.sg.id
+}
+
+resource "random_id" "randomId" {
+  keepers = {
+      resource_group: azurerm_resource_group.rg.name
+  }
+  byte_length = 8
+}
+
+resource "azurerm_storage_account" "storageAccount" {
+  account_replication_type = "LRS"
+  account_tier             = "Standard"
+  location                 = var.location
+  name                     = "diag${random_id.randomId.hex}"
+  resource_group_name      = azurerm_resource_group.rg.name
+}
+
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits = 4096
+}
+output "tls_private_key" {
+  value = tls_private_key.ssh.private_key_pem
+  sensitive = true
 }
 
 resource "azurerm_virtual_machine" "vm" {
