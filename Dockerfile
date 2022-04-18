@@ -3,7 +3,7 @@ FROM ubuntu:latest
 #Install defautl-jre
 RUN apt-get update && \
     apt-get install --yes software-properties-common \
-    && apt install -y default-jre
+    && apt install -y openjdk-11-jre-headless
 
 #Fetch minecraft server jar-file
 RUN mkdir server &&  apt-get install -y wget && cd server \
