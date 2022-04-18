@@ -121,8 +121,8 @@ resource "azurerm_virtual_machine" "vm" {
     os_type           = "linux"
   }
   os_profile {
-    admin_username = "adminuser"
-    admin_password = "P@$$w0rd1234!"
+    admin_username = <SOME_USER>
+    admin_password = <SOME_PASSWORD>
     computer_name  = var.project_name
   }
   os_profile_linux_config {
